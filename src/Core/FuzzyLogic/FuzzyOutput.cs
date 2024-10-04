@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ExpressEnginex.Fuzzy.Interfaces;
 
+
 namespace ExpressEnginex.Fuzzy
 {
     public class FuzzyOutput
@@ -25,7 +26,8 @@ namespace ExpressEnginex.Fuzzy
         public void Set(int consequent, IHasCentroid memberFunction)
         {
             if (_fuzzyActions.ContainsKey(consequent))
-                throw new ArgumentException($"Member function of {consequent} is already set. Please use different values for different consequents.", nameof(consequent));
+                throw new ArgumentException($"Member function of {consequent} is already set. Please use different values for different consequents.",
+                    nameof(consequent));
             
             var action = new Consequent(memberFunction);
             _fuzzyActions[consequent] = action;

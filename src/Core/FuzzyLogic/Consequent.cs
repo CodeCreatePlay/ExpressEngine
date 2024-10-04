@@ -2,6 +2,7 @@
 using System.Linq;
 using ExpressEnginex.Fuzzy.Interfaces;
 
+
 namespace ExpressEnginex.Fuzzy
 {
     internal class Consequent : IConsequent

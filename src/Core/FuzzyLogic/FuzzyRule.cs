@@ -1,5 +1,6 @@
 ﻿using ExpressEnginex.Fuzzy.Interfaces;
 
+
 namespace ExpressEnginex.Fuzzy
 {
     public static class FuzzyRule

@@ -1,5 +1,5 @@
 ﻿namespace ExpressEnginex.Fuzzy.Interfaces
-{
+{	
     public interface IRuleBuilder
     {
         IRuleApplier Then(IConsequent consequent);
