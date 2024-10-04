@@ -4,12 +4,7 @@ namespace ExpressEnginex.ScriptedSeq
     [System.Serializable]
     public class ScriptedAction<T>
     {
-        public readonly static int START_METHOD_ID  = 1;
-        public readonly static int UPDATE_METHOD_ID = 2;
-        public readonly static int END_METHOD_ID    = 3;
-
-
-        public enum ExecutionResult
+        public enum EndStatus
         {
             Running,
             Success,
@@ -38,9 +33,9 @@ namespace ExpressEnginex.ScriptedSeq
             return true;
         }
 
-        public virtual ExecutionResult Update()
+        public virtual EndStatus Update()
         {
-            return ExecutionResult.Success;
+            return EndStatus.Success;
         }
 
         /// <summary>
@@ -55,10 +50,7 @@ namespace ExpressEnginex.ScriptedSeq
             elapsedTime += UnityEngine.Time.deltaTime;
         }
 
-        public virtual bool OnEnd()
-        {
-            return true;
-        }
+        public virtual bool OnEnd() { return true; }
 
         public void Reset() => elapsedTime = 0.0f;
 

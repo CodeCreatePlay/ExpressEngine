@@ -27,13 +27,17 @@ namespace ExpressEnginex.ScriptedSeq
             StopAfterAll,
         }
 
+        private readonly static int START_METHOD_ID  = 1010;
+        private readonly static int UPDATE_METHOD_ID = 2020;
+        private readonly static int END_METHOD_ID    = 3030;
 
-        private ScriptedAction<T>[] actionsArray;          // list of actions, as set by user
+
+        private readonly ScriptedAction<T>[] actionsArray; // list of actions, as set by user
 
         private readonly T owner;                      // the owner of this action list
         private int idx = -1;                          // index of current executing action
-        private ScriptedAction<T> currentAction;           // current action which is executing
-        private ScriptedAction<T> lastActn;                // last executing action
+        private ScriptedAction<T> currentAction;       // current action which is executing
+        private ScriptedAction<T> lastActn;            // last executing action
 
         private bool isInTransition;                   // 
         private StopProcedure stopProcedure;
@@ -44,7 +48,7 @@ namespace ExpressEnginex.ScriptedSeq
         public bool currentActnInfoUpdated;            //
 
         // cache
-        private ScriptedAction<T>.ExecutionResult successStatus;
+        private ScriptedAction<T>.EndStatus successStatus;
 
 
         // constructor
@@ -98,22 +102,22 @@ namespace ExpressEnginex.ScriptedSeq
 
             successStatus = currentAction.Update();
 
-            if (successStatus == ScriptedAction<T>.ExecutionResult.Success)
+            if (successStatus == ScriptedAction<T>.EndStatus.Success)
                 Step(previous: false);
 
             else
             {
                 switch(successStatus)
                 {
-                    case ScriptedAction<T>.ExecutionResult.ResetFromStart:
+                    case ScriptedAction<T>.EndStatus.ResetFromStart:
                         MoveToFirst();
                         break;
 
-                    case ScriptedAction<T>.ExecutionResult.ResetFromLast:
+                    case ScriptedAction<T>.EndStatus.ResetFromLast:
                         Step(previous: true);
                         break;
 
-                    case ScriptedAction<T>.ExecutionResult.ResetFromCurrent:
+                    case ScriptedAction<T>.EndStatus.ResetFromCurrent:
                         currentAction.OnStart();
                         break;
                 }
@@ -156,12 +160,12 @@ namespace ExpressEnginex.ScriptedSeq
             if (lastActn != null)
             {
                 if (!_currentActionExited && !lastActn.OnEnd())
-                { UpdateCurrentActnInfo(ScriptedAction<T>.END_METHOD_ID); return; }
+                { UpdateCurrentActnInfo(END_METHOD_ID); return; }
 
                 if (!_currentActionExited)
                 { _currentActionExited = true; lastActn.Reset(); }
 
-                UpdateCurrentActnInfo(ScriptedAction<T>.START_METHOD_ID);
+                UpdateCurrentActnInfo(START_METHOD_ID);
                 if (!isStopped && !currentAction.OnStart())
                     return;
             }
@@ -170,13 +174,13 @@ namespace ExpressEnginex.ScriptedSeq
                 if (!_currentActionExited)
                 { _currentActionExited = true; }
 
-                UpdateCurrentActnInfo(ScriptedAction<T>.START_METHOD_ID);
+                UpdateCurrentActnInfo(START_METHOD_ID);
                 if (!isStopped && !currentAction.OnStart())
                     return;
             }
 
             isInTransition = false;
-            UpdateCurrentActnInfo(ScriptedAction<T>.UPDATE_METHOD_ID);
+            UpdateCurrentActnInfo(UPDATE_METHOD_ID);
         }
 
 
@@ -186,24 +190,22 @@ namespace ExpressEnginex.ScriptedSeq
         {
             if(_currentExecMethodID != newExecutingMethodID)
             {
-                // UnityEngine.Debug.LogFormat("Updated {0}", currentExecutingMethod);
                 currentActnInfo      = new CurrentActnInfo(currentAction, newExecutingMethodID);
                 _lastExecMethodID    = _currentExecMethodID;
                 _currentExecMethodID = newExecutingMethodID;
             }
-
 
             if (shouldStop)
             {
                 switch (stopProcedure)
                 {
                     case StopProcedure.StopAfterCurrent:
-                        if (_lastExecMethodID == ScriptedAction<T>.END_METHOD_ID)
+                        if (_lastExecMethodID == END_METHOD_ID)
                             isStopped = true;
                         break;
 
                     case StopProcedure.StopAfterAll:
-                        if (idx == actionsArray.Length - 1 && _currentExecMethodID == ScriptedAction<T>.END_METHOD_ID)
+                        if (idx == actionsArray.Length - 1 && _currentExecMethodID == END_METHOD_ID)
                             isStopped = true;
                         break;
                 }
