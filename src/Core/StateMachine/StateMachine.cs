@@ -31,6 +31,17 @@ namespace ExpressEnginex.StateMachine
                 return statesmap;
             }
         }
+		
+		/*
+        private StateTransitionBuilder<T> stateTransitionBuilder;
+        public bool HasTransitionBuilder
+        {
+            get
+            {
+                return stateTransitionBuilder != null;
+            }
+        }
+		*/
 
         // cache
         // internally used to keep track of transition
@@ -52,9 +63,21 @@ namespace ExpressEnginex.StateMachine
             StatesMap[idx] = newState;
         }
 
-        public void AddGlobalState(StateBase<T> state, System.Func<bool> trigger)
+        public bool AddState(System.Action updateMethodCallback, int idx,
+    System.Func<bool> enterMethodCallback = null, System.Func<bool> exitMethodCallback = null)
         {
-            if (state == null || trigger == null)
+            PlaceholderState placeHolderState = new(Owner, enterMethodCallback, updateMethodCallback, exitMethodCallback);
+
+            if (!CanAddState(placeHolderState, idx))
+                return false;
+
+            AddState(placeHolderState, idx);
+            return true;
+        }
+
+        public void AddGlobalState(StateBase<T> state, System.Func<bool> triggerMethodCallback)
+        {
+            if (state == null || triggerMethodCallback == null)
             {
 #if UNITY_EDITOR
                 UnityEngine.Debug.LogWarning("Failed to add global state.");
@@ -63,15 +86,15 @@ namespace ExpressEnginex.StateMachine
             }
 
             globalState = state;
-            this.globalStateTrigger = trigger;
+            this.globalStateTrigger = triggerMethodCallback;
             hasGlobalState = true;
         }
 
         public StateBase<T> AddGlobalState(
-            StateBase<T> state, System.Func<bool> trigger, System.Action update,
+            StateBase<T> state, System.Func<bool> triggerMethodCallback, System.Action update,
             System.Func<bool> enter = null, System.Func<bool> exit = null)
         {
-            if (state == null || trigger == null)
+            if (state == null || triggerMethodCallback == null)
             {
 #if UNITY_EDITOR
                 UnityEngine.Debug.LogWarning("Failed to add global state.");
@@ -81,21 +104,14 @@ namespace ExpressEnginex.StateMachine
 
             PlaceholderState placeHolderState = new(Owner, enter, update, exit);
             globalState = placeHolderState;
-            globalStateTrigger = trigger;
+            globalStateTrigger = triggerMethodCallback;
             hasGlobalState = true;
             return globalState;
         }
 
-        public StateBase<T> CreateState(System.Action updateMethod,
-            System.Func<bool> enterMethod = null, System.Func<bool> exitMethod = null)
-        {
-            PlaceholderState placeHolderState = new(Owner, enterMethod, updateMethod, exitMethod);
-            return placeHolderState;
-        }
-
         private bool CanAddState(StateBase<T> state, int idx)
         {
-            if(idx == INVALID_STATE || idx < 0)
+            if(idx == INVALID_STATE || idx < 0 || idx == GLOBAL_STATE_IDX)
             {
 #if UNITY_EDITOR
                 UnityEngine.Debug.LogWarningFormat("Unable to add state '{0}', invalid state idx", nameof(state));
@@ -126,31 +142,19 @@ namespace ExpressEnginex.StateMachine
         {
             StateBase<T> newState;
 
-            if (idx == GLOBAL_STATE_IDX)
+            // make sure state exists
+            if (!statesmap.ContainsKey(idx))
             {
-                newState = globalState;
-            }
-            else
-            {
-                // make sure state exists
-                if (!statesmap.ContainsKey(idx))
-                {
 #if UNITY_EDITOR
-                    UnityEngine.Debug.LogWarningFormat("Unable to switch state; state {0} does not exits.!", nameof(idx));
+                UnityEngine.Debug.LogWarningFormat("Unable to switch state; state {0} does not exits.!", nameof(idx));
 #endif
-                    return;
-                }
-
-                newState = statesmap[idx];
+                return;
             }
+
+            newState = statesmap[idx];
 
             if (currentStateIdx == idx)
                 return;
-
-            /*
-            if(FORCE_TRIGGER)
-            { currentStateExited = true; }
-            */
 
             this.nextStateIdx = idx;
             shouldTransition = true;
@@ -171,7 +175,7 @@ namespace ExpressEnginex.StateMachine
             if (!IsOK())
                 return;
 
-            if (!currentStateExited && !currentState.Exit())
+            if (!currentStateExited && currentState != null && !currentState.Exit())
                 return;
 
             currentStateExited = true;
@@ -192,8 +196,10 @@ namespace ExpressEnginex.StateMachine
             {
                 if(!isInGlobalState)
                 {
+                    // same logic as in switch state
                     isInGlobalState = true;
-                    SwitchState(GLOBAL_STATE_IDX);
+                    nextStateIdx = GLOBAL_STATE_IDX;
+                    shouldTransition = true;
                 }
             }
 
