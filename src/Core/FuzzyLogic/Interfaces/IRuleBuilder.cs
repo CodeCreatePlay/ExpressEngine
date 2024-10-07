@@ -1,4 +1,5 @@
-﻿namespace ExpressEnginex.Fuzzy.Interfaces
+﻿
+namespace ExpressEnginex.Fuzzy.Interfaces
 {	
     public interface IRuleBuilder
     {
