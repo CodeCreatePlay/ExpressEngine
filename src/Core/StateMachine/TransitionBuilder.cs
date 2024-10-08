@@ -111,6 +111,26 @@ namespace ExpressEnginex.StateMachine
 
 			return this;
 		}
+		
+		public IStateBuilderCondition<T> ElseIf(ICondition condition)
+		{
+			if (_state != BuilderState.Then)
+				throw new InvalidOperationException("ElseIf can only be called after Then.");
+
+			_rules.Add((condition, new List<IConsequent>()));
+			_state = BuilderState.ElseIf;
+			return this;
+		}
+
+		public IStateBuilderAction<T> Else(IConsequent consequent)
+		{
+			if (_state != BuilderState.Then)
+				throw new InvalidOperationException("Else must come after Then.");
+
+			_elseConsequents.Add(consequent);
+			_state = BuilderState.Else;
+			return this;
+		}
 
 		// Update Evaluate to handle both class and method-based conditions and actions
 		public void Evaluate()
