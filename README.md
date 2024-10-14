@@ -1,10 +1,10 @@
-## 👾 Library of graphics, rendering and AI-programming tools.
+## 👾 This is a repository of tools for the upcoming game that I am working on, these tools are not meant to be genre-specific, feel free to include them in your projects as well !
  
 <h3 align="center">Community</h3>
 
 <p align="center">
 <a href='https://discord.gg/WZ3GZCvVtg' target="_blank"><img alt='Discord' src='https://img.shields.io/badge/Discord-5865F2?style=plastic&logo=discord&logoColor=white'/></a>
-<a href='https://www.patreon.com/expressengine' target="_blank"><img alt='Patreon' src='https://img.shields.io/badge/Patreon-F96854?style=plastic&logo=patreon&logoColor=white'/></a>
+<a href='https://github.com/CodeCreatePlay/ExpressEngine' target="_blank"><img alt='Patreon' src='https://img.shields.io/badge/Patreon-F96854?style=plastic&logo=patreon&logoColor=white'/></a>
 <a href='https://github.com/CodeCreatePlay/ExpressEngine' target="_blank"><img alt='Unity' src='https://img.shields.io/badge/Reddit-FF4500?style=plastic&logo=reddit&logoColor=white'/></a>
 <a href='https://github.com/CodeCreatePlay/ExpressEngine' target="_blank"><img alt='Unity' src='https://img.shields.io/badge/YouTube-FF0000?style=plastic&logo=youtube&logoColor=white'/></a>
 </p>
