@@ -11,21 +11,21 @@ namespace ExpressEngine.StateMachine.Interfaces
 		void Execute(); // Executes the consequent when the condition is met
 	}
 
-    public interface IStateBuilderInitial<T>
-    {
-        IStateBuilderCondition<T> If(ICondition condition);
-    }
+	public interface IStateBuilderInitial<T>
+	{
+		IStateBuilderCondition<T> If(ICondition condition);
+	}
 
-    public interface IStateBuilderCondition<T>
-    {
-        IStateBuilderAction<T> Then(IConsequent consequent);
-        IStateBuilderCondition<T> ElseIf(ICondition condition);
-        IStateBuilderAction<T> Else(IConsequent consequent);
-    }
+	public interface IStateBuilderCondition<T>
+	{
+		IStateBuilderAction<T> Then(IConsequent consequent);
+		IStateBuilderCondition<T> ElseIf(ICondition condition);
+		IStateBuilderAction<T> Else(IConsequent consequent);
+	}
 
-    public interface IStateBuilderAction<T>
-    {
-        IStateBuilderAction<T> And(IConsequent consequent);
-        void Evaluate();
-    }
+	public interface IStateBuilderAction<T>
+	{
+		IStateBuilderAction<T> And(IConsequent consequent);
+		void Evaluate();
+	}
 }
