@@ -1,4 +1,4 @@
-## 👾 This is a repository of tools for the upcoming game that I am working on, these tools are not meant to be genre-specific, feel free to include them in your projects as well !
+## 👾 This is a repository of tools for an upcoming game by 'girlsdevgames', these tools are not meant to be genre-specific, feel free to include them in your projects!
  
 <h3 align="center">Community</h3>
 
@@ -68,6 +68,8 @@ public class AI_Character : MonoBehaviour
 }
 ```
 
+
+
 ### 🟦 Character Controller
 
 Versatile Rigidbody CharacterController designed for realistic humanoid character movements in mind, however the the system is flexible enough to be modified for other character types as well.
@@ -85,7 +87,7 @@ See the included CharacterController demo project for an example usage, the incl
 
 **CharacterMotor:-**
 
-CharacterMotor handles the actual character movements. You can use it to build your own CharacterControllers on top, or simply modify the included CharacterController script to suit your project's requirements. CharacterMotor provides several methods for controlling movements.
+CharacterMotor handles the actual character movements, and provides several methods for controlling movements. You can use it to build your own CharacterControllers on top.
 
 - **1. Move:** This is the easiest way to get moving. Call `Move` every fixed update to set the intended movement velocity.
 
