@@ -6,8 +6,8 @@ namespace ExpressEngine.StateMachine
 
         private StateBase<T> globalState; // generally global should be the one where entiry stops to exist
 
-        private readonly int INVALID_STATE = -1;
-        private readonly int GLOBAL_STATE_IDX = 1010;
+        public static readonly int INVALID_STATE_ID = -1;
+        public static readonly int GLOBAL_STATE_ID  = 1010;
 
         private StateBase<T> currentState;
         private int currentStateIdx = -1;
@@ -31,17 +31,6 @@ namespace ExpressEngine.StateMachine
             }
         }
 		
-		/*
-        private StateTransitionBuilder<T> stateTransitionBuilder;
-        public bool HasTransitionBuilder
-        {
-            get
-            {
-                return stateTransitionBuilder != null;
-            }
-        }
-		*/
-
         // cache
         // internally used to keep track of transition
         private bool shouldTransition = false;
@@ -110,7 +99,7 @@ namespace ExpressEngine.StateMachine
 
         private bool CanAddState(StateBase<T> state, int idx)
         {
-            if(idx == INVALID_STATE || idx < 0 || idx == GLOBAL_STATE_IDX)
+            if(idx == INVALID_STATE_ID || idx < 0 || idx == GLOBAL_STATE_ID)
             {
 #if UNITY_EDITOR
                 UnityEngine.Debug.LogWarningFormat("Unable to add state '{0}', invalid state idx", nameof(state));
@@ -126,7 +115,7 @@ namespace ExpressEngine.StateMachine
                 return false;
             }
 
-            if (idx == INVALID_STATE || StatesMap.ContainsKey(idx))
+            if (idx == INVALID_STATE_ID || StatesMap.ContainsKey(idx))
             {
 #if UNITY_EDITOR
                 UnityEngine.Debug.LogWarningFormat("Unable to add state '{0}', key already exists.", idx);
@@ -197,15 +186,19 @@ namespace ExpressEngine.StateMachine
                 {
                     // same logic as in switch state
                     isInGlobalState = true;
-                    nextStateIdx = GLOBAL_STATE_IDX;
+                    nextStateIdx = GLOBAL_STATE_ID;
                     shouldTransition = true;
                 }
             }
 
             if (currentStateIdx != -1 && !shouldTransition)
-                currentState.Update();
-            else
+			{
+				currentState.Update();
+			}
+            else if(shouldTransition) 
+			{
                 Transition();
+			}
         }
 
         private bool IsOK()
