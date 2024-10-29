@@ -1,148 +1,166 @@
 using System;
 using System.Collections.Generic;
-
+using System.Linq;
 
 namespace ExpressEngine.StateMachine.TransitionBuilder
 {
-	using StateMachine.Interfaces;
-	
-	
-    public class TransitionBuilder<T> : ITransitionBuilderInitial<T>, ITransitionBuilderCondition<T>, IAction<T>
+    using StateMachine.Interfaces;
+
+    public class TransitionBuilder<T>
     {
-        private readonly List<ICondition> rules = new();
-        private readonly Dictionary<ICondition, Func<T>> targetStates = new();
-        private Func<T> _elseState;
-        private BuilderState _state = BuilderState.None;
+        private readonly List<RuleBase<T>> chain = new();
 
         public TransitionBuilder() { }
 
-        public static ITransitionBuilderInitial<T> Begin()
+        public static TransitionBuilder<T> Begin()
         {
             return new TransitionBuilder<T>();
         }
 
-        public ITransitionBuilderCondition<T> If(ICondition condition)
+        // Switch-Case Block Methods
+        public SwitchBuilder<T> Switch(Func<object> keySelector)
         {
-            ValidateStateForIf();
-            rules.Add(condition);
-            _state = BuilderState.If;
-            return this;
+            var switchRule = new SwitchRule<T>(keySelector);
+            chain.Add(switchRule);
+            return new SwitchBuilder<T>(this, switchRule);
         }
 
-        public ITransitionBuilderCondition<T> If(Func<bool> condition)
+        // Conditional Block Methods
+        public ConditionalBuilder<T> If(ICondition condition)
         {
-            ValidateStateForIf();
-            rules.Add(new PlaceholderState(condition));
-            _state = BuilderState.If;
-            return this;
+            var rule = new Rule<T>(condition);
+            chain.Add(rule);
+            return new ConditionalBuilder<T>(this, rule);
         }
 
-        public ITransitionBuilderCondition<T> Then(T targetState)
+        public ConditionalBuilder<T> If(Func<bool> condition)
         {
-            return Then(() => targetState);
+            var rule = new Rule<T>(new ConditionPlaceholder(condition));
+            chain.Add(rule);
+            return new ConditionalBuilder<T>(this, rule);
         }
 
-        public ITransitionBuilderCondition<T> Then(Func<T> nestedEvaluation)
+        // Evaluate method to execute the first matching rule's action
+        public T Evaluate()
         {
-            ValidateStateForThen();
-            var lastCondition = rules[^1];
-            targetStates[lastCondition] = nestedEvaluation;
-            _state = BuilderState.Then;
-            return this;
-        }
+            var matchingRule = chain.FirstOrDefault(rule => rule.Evaluate())
+                ?? throw new InvalidOperationException("No valid state transition found.");
 
-        public ITransitionBuilderCondition<T> ElseIf(ICondition condition)
-        {
-            ValidateStateForElseIf();
-            rules.Add(condition);
-            _state = BuilderState.ElseIf;
-            return this;
-        }
-
-        public ITransitionBuilderCondition<T> ElseIf(Func<bool> condition)
-        {
-            ValidateStateForElseIf();
-            rules.Add(new PlaceholderState(condition));
-            _state = BuilderState.ElseIf;
-            return this;
-        }
-
-        public IAction<T> Else(T targetState)
-        {
-            return Else(() => targetState);
-        }
-
-        public IAction<T> Else(Func<T> elseStateEvaluation)
-        {
-            ValidateStateForElse();
-            _elseState = elseStateEvaluation;
-            _state = BuilderState.Else;
-            return this;
-        }
-
-		public T Evaluate()
-		{
-			foreach (var condition in rules)
-			{
-				if (condition.Evaluate() && targetStates.TryGetValue(condition, out var targetStateEvaluation))
-				{
-					return targetStateEvaluation();
-				}
-			}
-
-			if (_elseState != null)
-			{
-				return _elseState();
-			}
-
-			throw new InvalidOperationException("No valid state transition found.");
-		}
-
-        private void TransitionTo(T targetState)
-        {
-            Console.WriteLine($"Transitioning to state: {targetState}");
-        }
-
-        private void ValidateStateForIf()
-        {
-            if (_state != BuilderState.None) throw new InvalidOperationException("If must be the first call.");
-        }
-
-        private void ValidateStateForThen()
-        {
-            if (_state != BuilderState.If && _state != BuilderState.ElseIf)
-                throw new InvalidOperationException("Then must come after If or ElseIf.");
-        }
-
-        private void ValidateStateForElseIf()
-        {
-            if (_state != BuilderState.Then)
-                throw new InvalidOperationException("ElseIf can only be called after Then.");
-        }
-
-        private void ValidateStateForElse()
-        {
-            if (_state != BuilderState.Then)
-                throw new InvalidOperationException("Else must come after Then.");
-        }
-
-        private class PlaceholderState : ICondition
-        {
-            private readonly Func<bool> _callback;
-
-            public PlaceholderState(Func<bool> callback) => _callback = callback;
-
-            public bool Evaluate() => _callback();
+            return matchingRule.Fire();
         }
 		
-		// Enum to track the internal state of the builder
-		public enum BuilderState
-		{
-			None,
-			If,
-			Then,
-			ElseIf,
-			Else,
-		}
+		// ------------------------------------------------------------------------------------------ //
+		// The switch-builder and condition-builder classes provide mechanism for creating transition 
+		// chains using fluent builder pattern.
+		
+        // Builder for Switch statements
+        public class SwitchBuilder<T>
+        {
+            private readonly TransitionBuilder<T> parentBuilder;
+            private readonly SwitchRule<T> switchRule;
+
+            public SwitchBuilder(TransitionBuilder<T> parentBuilder, SwitchRule<T> switchRule)
+            {
+                this.parentBuilder = parentBuilder;
+                this.switchRule = switchRule;
+            }
+
+            public SwitchBuilder<T> Case(object caseKey, T targetState)
+            {
+                return Case(caseKey, () => targetState);
+            }
+
+            public SwitchBuilder<T> Case(object caseKey, Func<T> action)
+            {
+                switchRule.AddCase(caseKey, new ActionPlaceholder<T>(action));
+                return this; // Returning self for method chaining
+            }
+
+            public SwitchBuilder<T> Default(T targetState)
+            {
+                return Default(() => targetState);
+            }
+
+            public SwitchBuilder<T> Default(Func<T> action)
+            {
+                switchRule.SetDefault(new ActionPlaceholder<T>(action));
+                return this; // Returning self for method chaining
+            }
+
+            public TransitionBuilder<T> EndSwitch()
+            {
+                return parentBuilder; // Return to the parent builder
+            }
+        }
+
+        // Builder for Conditional statements
+        public class ConditionalBuilder<T>
+        {
+            private readonly TransitionBuilder<T> parentBuilder;
+            private readonly Rule<T> conditionRule;
+
+            public ConditionalBuilder(TransitionBuilder<T> parentBuilder, Rule<T> conditionRule)
+            {
+                this.parentBuilder = parentBuilder;
+                this.conditionRule = conditionRule;
+            }
+
+            public ConditionalBuilder<T> Then(T targetState)
+            {
+                return Then(() => targetState);
+            }
+
+            public ConditionalBuilder<T> Then(Func<T> action)
+            {
+                conditionRule.AddAction(new ActionPlaceholder<T>(action));
+                return this; // Returning self for method chaining
+            }
+
+            public ConditionalBuilder<T> ElseIf(ICondition condition)
+            {
+                var rule = new Rule<T>(condition);
+                parentBuilder.chain.Add(rule);
+                return new ConditionalBuilder<T>(parentBuilder, rule);
+            }
+
+            public ConditionalBuilder<T> ElseIf(Func<bool> condition)
+            {
+                var rule = new Rule<T>(new ConditionPlaceholder(condition));
+                parentBuilder.chain.Add(rule);
+                return new ConditionalBuilder<T>(parentBuilder, rule);
+            }
+
+            public TransitionBuilder<T> Else(T targetState)
+            {
+                return Else(() => targetState);
+            }
+
+            public TransitionBuilder<T> Else(Func<T> action)
+            {
+                var rule = new Rule<T>(new ConditionPlaceholder(() => true));
+                rule.AddAction(new ActionPlaceholder<T>(action));
+                parentBuilder.chain.Add(rule);
+                return parentBuilder; // Return to the parent builder
+            }
+        }
+
+		// ------------------------------------------------------------------------------------------ //
+		// Placeholder classes for encapsulating user-defined conditions and action callbacks as
+		// ICondition and IAction objects.
+
+        // Placeholder Classes
+        private class ConditionPlaceholder : ICondition
+        {
+            private readonly Func<bool> callback;
+            public ConditionPlaceholder(Func<bool> callback) => this.callback = callback;
+            public override bool Evaluate() => callback();
+        }
+
+        private class ActionPlaceholder<T> : IAction<T>
+        {
+            private readonly Func<T> callback;
+            public ActionPlaceholder(Func<T> callback) => this.callback = callback;
+            public override T Fire() => callback();
+        }
     }
 }
