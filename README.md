@@ -1,4 +1,4 @@
-## 👾 This is a repository of tools for an upcoming game by 'girlsdevgames', these tools are not meant to be genre-specific, feel free to include them in your projects!
+## 👾 This is a repository of AI-programming and graphics-rendering tools for an upcoming game by 'girlsdevgames', these tools are not meant to be genre-specific, feel free to include them in your projects!
  
 <h3 align="center">Community</h3>
 
@@ -10,11 +10,11 @@
 </p>
 
 ### Table of Contents
-- [StateMachine](https://github.com/CodeCreatePlay/ExpressEngine)
-- [Character Controller](https://github.com/CodeCreatePlay/ExpressEngine)
+- [StateMachine with Transition Builder](https://github.com/CodeCreatePlay/ExpressEngine)
 
-### 🟦 StateMachine
-A State Machine is a computational model used to design systems that can be in one of a finite number of specific states at any given time, transitions between these states based on inputs or events, with well-defined rules that dictate how and when transitions occur. StateMachines are particularly useful for modeling behaviors in systems where the current state influences future behavior, such as control systems, parsers and game logic.
+### 🟦 StateMachine with Transition Builder
+A State Machine is a computational model used to design systems that can be in one of a finite number of specific states at any given time, transitions between these states is defined by fixed rules which are based on user-input, external or internal events.  
+In context of 
 
 **Features:-**
 - Define States as either as separate objects or as callback methods.
@@ -68,55 +68,3 @@ public class AI_Character : MonoBehaviour
 }
 ```
 
-
-
-### 🟦 Character Controller
-
-Versatile Rigidbody CharacterController designed for realistic humanoid character movements in mind, however the the system is flexible enough to be modified for other character types as well.
-
-**Features:-**
-- Ground detection - Ground contact information is provided each physics frame. Performs ground detection with configurable parameters, using 'SphereCast' to support ledge perching.  
-- Slope traversal with ground snapping - Snap to ground surface while moving. Correctly handles velocity on angled surfaces.  
-- Velocity physics - Optional built-in acceleration and deceleration.  
-- Supports moving surfaces - Correctly handles velocity on moving platforms.  
-- Intuitive collider adjustment - Configure collider height or step height while keeping collider bottom or top fixed.
-
-**Usage Instructions:-**
-
-See the included CharacterController demo project for an example usage, the included CharacterController script, built on top of CharacterMotor, should be good enough for most humanoid character movement use cases.
-
-**CharacterMotor:-**
-
-CharacterMotor handles the actual character movements, and provides several methods for controlling movements. You can use it to build your own CharacterControllers on top.
-
-- **1. Move:** This is the easiest way to get moving. Call `Move` every fixed update to set the intended movement velocity.
-
-	```csharp
-	Move(Vector3 velocity);
-	Move(float speed, Vector3 direction);
-	```
-
-- **2. Active Velocity:**
-`activeVelocity` is an internal velocity field that CharacterMotor uses to set Rigidbody velocity at the end of each fixed update. When the 'Velocity Mode' inspector field is set to a mode that uses velocity physics (IE. acceleration, deceleration, friction), `activeVelocity` will persist across fixed updates and gradually change based on the configured velocity physics logic.
-To ignore any applicable velocity physics and directly set CharacterMotor velocity, you can set `activeVelocity` by:
-
-	```csharp
-	SetActiveVelocity(Vector3 velocity);
-	```
-
-  You can clear the `activeVelocity` by:
-
-	```csharp
-	ClearActiveVelocity();
-	```
-
-- **3. Delta Position:** Directly sets the intended position change for the current fixed update. This can be used to drive CharacerMotor by animation root motion.
-
-	```csharp
-	MoveDeltaPosition(Vector3 deltaPosition, bool alignToGround, bool restrictToGround)
-	```
-
-**Velocity Physics Modes:-**
-Use the Velocity Mode inspector field on a CharacerMotor to configure velocity physics behavior.
-- Raw: Instant acceleration and deceleration
-- Simple: Fixed acceleration and deceleration based on the Speed Change Rate inspector field.
