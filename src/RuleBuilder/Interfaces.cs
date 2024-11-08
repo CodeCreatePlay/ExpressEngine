@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ExpressEngine.StateMachine.Interfaces
+namespace ExpressEngine.RuleBuilder.Interfaces
 {
 	/*
 	Classes for book keeping consequents and their corresponding antecedents, represented as 'Rules'.
@@ -115,46 +115,46 @@ namespace ExpressEngine.StateMachine.Interfaces
 	Base classes to provide a mechanism for creating transition chains using the fluent builder pattern.
 	*/
 	
-	public abstract class TransitionBuilderBase<T>
+	public abstract class RuleBuilder<T>
 	{
 		protected List<RuleBase<T>> chain = new();
 		
 		public abstract T Evaluate();
 	}
 
-	public abstract class SwitchBuilder<T> : TransitionBuilderBase<T>
+	public abstract class SwitchBuilder<T> : RuleBuilder<T>
 	{
 		public abstract SwitchCaseBuilder<T> Case(object caseKey, Func<T> action);
 		public abstract SwitchDefaultBuilder<T> Default(Func<T> action);
 	}
 
-	public abstract class SwitchCaseBuilder<T> : TransitionBuilderBase<T>
+	public abstract class SwitchCaseBuilder<T> : RuleBuilder<T>
 	{
 		public abstract SwitchBuilder<T> EndSwitch();
 	}
 
-	public abstract class SwitchDefaultBuilder<T> : TransitionBuilderBase<T>
+	public abstract class SwitchDefaultBuilder<T> : RuleBuilder<T>
 	{
 		public abstract SwitchBuilder<T> EndSwitch();
 	}
 
-	public abstract class IfBuilder<T> : TransitionBuilderBase<T>
+	public abstract class IfBuilder<T> : RuleBuilder<T>
 	{
 		public abstract ThenBuilder<T> Then(Func<T> action);
 		public abstract ElseIfBuilder<T> ElseIf(Func<bool> condition);
 		public abstract ElseBuilder<T> Else(Func<T> action);
 	}
 
-	public abstract class ElseIfBuilder<T> : TransitionBuilderBase<T>
+	public abstract class ElseIfBuilder<T> : RuleBuilder<T>
 	{
 		public abstract ThenBuilder<T> Then(Func<T> action);
 		public abstract ElseBuilder<T> Else(Func<T> action);
 	}
 
-	public abstract class ElseBuilder<T> : TransitionBuilderBase<T>
+	public abstract class ElseBuilder<T> : RuleBuilder<T>
 	{
-		public abstract TransitionBuilderBase<T> EndElse();
+		public abstract RuleBuilder<T> EndElse();
 	}
 
-	public abstract class ThenBuilder<T> : TransitionBuilderBase<T> { }
+	public abstract class ThenBuilder<T> : RuleBuilder<T> { }
 }

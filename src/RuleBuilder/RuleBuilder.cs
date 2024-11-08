@@ -2,19 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ExpressEngine.StateMachine.TransitionBuilder
+namespace ExpressEngine.RuleBuilder
 {
-    using StateMachine.Interfaces;
+    using RuleBuilder.Interfaces;
 
-    public class TransitionBuilder<T>
+    public class RuleBuilder<T>
     {
         private readonly List<RuleBase<T>> chain = new();
 
-        public TransitionBuilder() { }
+        public RuleBuilder() { }
 
-        public static TransitionBuilder<T> Begin()
+        public static RuleBuilder<T> Begin()
         {
-            return new TransitionBuilder<T>();
+            return new RuleBuilder<T>();
         }
 
         // Switch-Case Block Methods
@@ -56,10 +56,10 @@ namespace ExpressEngine.StateMachine.TransitionBuilder
         // Builder for Switch statements
         public class SwitchBuilder<T>
         {
-            private readonly TransitionBuilder<T> parentBuilder;
+            private readonly RuleBuilder<T> parentBuilder;
             private readonly SwitchRule<T> switchRule;
 
-            public SwitchBuilder(TransitionBuilder<T> parentBuilder, SwitchRule<T> switchRule)
+            public SwitchBuilder(RuleBuilder<T> parentBuilder, SwitchRule<T> switchRule)
             {
                 this.parentBuilder = parentBuilder;
                 this.switchRule = switchRule;
@@ -87,7 +87,7 @@ namespace ExpressEngine.StateMachine.TransitionBuilder
                 return this; // Returning self for method chaining
             }
 
-            public TransitionBuilder<T> EndSwitch()
+            public RuleBuilder<T> EndSwitch()
             {
                 return parentBuilder; // Return to the parent builder
             }
@@ -96,10 +96,10 @@ namespace ExpressEngine.StateMachine.TransitionBuilder
         // Builder for Conditional statements
         public class ConditionalBuilder<T>
         {
-            private readonly TransitionBuilder<T> parentBuilder;
+            private readonly RuleBuilder<T> parentBuilder;
             private readonly Rule<T> conditionRule;
 
-            public ConditionalBuilder(TransitionBuilder<T> parentBuilder, Rule<T> conditionRule)
+            public ConditionalBuilder(RuleBuilder<T> parentBuilder, Rule<T> conditionRule)
             {
                 this.parentBuilder = parentBuilder;
                 this.conditionRule = conditionRule;
@@ -130,12 +130,12 @@ namespace ExpressEngine.StateMachine.TransitionBuilder
                 return new ConditionalBuilder<T>(parentBuilder, rule);
             }
 
-            public TransitionBuilder<T> Else(T targetState)
+            public RuleBuilder<T> Else(T targetState)
             {
                 return Else(() => targetState);
             }
 
-            public TransitionBuilder<T> Else(Func<T> action)
+            public RuleBuilder<T> Else(Func<T> action)
             {
                 var rule = new Rule<T>(new ConditionPlaceholder(() => true));
                 rule.AddAction(new ActionPlaceholder<T>(action));
