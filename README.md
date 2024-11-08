@@ -1,4 +1,4 @@
-## 👾 This is a repository of AI-programming and graphics-rendering tools for an upcoming game by 'girlsdevgames', these tools are not meant to be genre-specific, feel free to include them in your projects!
+## 👾 Library of graphics, rendering and AI programming tools designed to be used as backend for games and other related projects, feel free to include in your projects!
  
 <h3 align="center">Community</h3>
 
@@ -11,60 +11,155 @@
 
 ### Table of Contents
 - [StateMachine with Transition Builder](https://github.com/CodeCreatePlay/ExpressEngine)
+- [Hierarchical RuleBuilder](https://github.com/CodeCreatePlay/ExpressEngine)
 
 ### 🟦 StateMachine with Transition Builder
 A State Machine is a computational model used to design systems that can be in one of a finite number of specific states at any given time, transitions between these states is defined by fixed rules which are based on user-input, external or internal events.  
-In context of 
 
 **Features:-**
-- Define States as either as separate objects or as callback methods.
-- Separate State initialization and disposal logic.
-- A Global State to account for situations when an entity stops to exists, such as character death.
-- State transition builder to easily define State transition conditions and rules in one place, rather than hard-coding them directly within the State objects themselves.
+- Define states as either as separate objects or as callback methods.
+- Separate state initialization and disposal logic.
+- A global state to account for situations when an entity stops to exists, such as character death.
+- [RuleBuilder](https://github.com/CodeCreatePlay/ExpressEngine) or transition builder to define state transitions in a modular-hierarchical way, in one place, rather than embedding them within individual state objects.
 
 ```
+using ExpressEngine.StateMachine;
+
 public class AI_Character : MonoBehaviour
 {
     private void Start()
     {
-        // StateMachine instance
-        state_machine = new(this);
+        // Initialize StateMachine instance
+        state_machine = new StateMachine(this);
 
-        // Create State instances
-        combat_state = new(this);
-        patrol_state = new(this);
-        death_state  = new(this);
+        // Create instances of various States
+        combat_state = new CombatState(this);
+        patrol_state = new PatrolState(this);
+        death_state  = new DeathState(this);
 
-        // There are 2 ways to add a new State to StateMachine.
+        // **1. Add States to the StateMachine**
 
-        // 1. Add State instances directly to StateMachine together a unique int ID for that State.
+        // Option 1: Directly add State instances with a unique ID
         state_machine.AddState(combat_state, COMBAT_STATE);
         state_machine.AddState(patrol_state, PATROL_STATE);
 
-        // 2. For lightweight StateS such as an idle State, you can directly specify
-        // Enter, Update and Exit methods, together with a unique int ID for the new State. 
-        // Enter and Exit methods are optional.
-        // The returned value of AddState is a new State object created internally.
-        idle_state = state_machine.AddState(OnIdleUpdate, IDLE_STATE, enterMethodCallback:OnIdleEnter, exitMethodCallback:OnIdleExit);
+        // Option 2: Define lightweight States (like Idle) with Enter, Update, and Exit methods
+        // Specify a unique ID and optional callbacks for entering and exiting the State
+        idle_state = state_machine.AddState(OnIdleUpdate, IDLE_STATE, 
+                                            enterMethodCallback: OnIdleEnter, 
+                                            exitMethodCallback: OnIdleExit);
 
-        // To account for situations such as a character's death which must be honored regardless the current State, can be
-        // done using a Global-State, together with a Global-State-Trigger which is just a callback function and
-        // returns a bool value, the Global-State will trigger as soon as its trigger will return true.
+        // **2. Add a Global State**
+
+        // Global States handle conditions that should be respected regardless of the current State
+        // Example: When character dies, the StateMachine switches to death_state if IsAlive returns false.
         state_machine.AddGlobalState(death_state, triggerMethodCallback: IsAlive);
 
-        // To switch to a different State 
+        // **3. Switch to a specific State**
+
+        // Set the StateMachine to start in the Idle State
         state_machine.SwitchState(IDLE_STATE);
-		
-        // The default order of execution is that, when a State transition is requested, the Exit-Method of current State is invoked,
-        // followed by the Start-Method of new State, for complex initialization and disposal logic both Enter and Exit methods can
-        // continue to execute as long as their return value is 'false', OnUpdate method starts after Start method return 'true'.
+
+        // **State Transition Order:**
+        // - When a transition is requested, the Exit method of the current State is called.
+        // - Then, the Enter method of the new State is called.
+        // - Complex initialization and disposal logic can be controlled by returning false from Enter and Exit methods.
+        // - The Update method of the new State begins after Enter returns true.
     }
 
     private void Update()
     {
-        if(state_machine != null)
+        if (state_machine != null)
             state_machine.Update();
     }
+
+    // Example callbacks for the Idle State
+    private bool OnIdleEnter()
+    {
+        // Continue initialize logic as long as 'some_condition' is true.
+        if (some_condition)
+        {
+            // Continue initializing
+            return false;
+        }
+
+        // Initialization complete, proceed to Update method
+        return true;
+    }
+
+    private void OnIdleUpdate() 
+    {
+        // Logic during Idle
+    }
+
+    private bool OnIdleExit()
+    {
+        // Continue exit logic as long as 'some_condition' is true.
+        if (some_condition)
+        {
+            // Continue cleanup
+            return false;
+        }
+
+        // Cleanup complete, proceed to the next State's Enter method
+        return true;
+    }
+
+    private bool IsAlive() => /* return true if character is alive, false otherwise */;
 }
 ```
+
+To create a new State for the State Machine, define a class that inherits from StateBase<T>. This base class requires a template parameter (T) representing the type of the State Machine's owner, which is usually the main object that holds or controls the State Machine (e.g., an AI character or any game entity).
+
+1. Define the State Class: Create a new class that extends StateBase<T>, where T is the owner’s type.
+2. Implement State Methods: Override methods such as OnEnter, OnUpdate, and OnExit to define the behavior of this State during its lifecycle.
+
+```
+public class PatrolState<T> : StateBase<T>
+{
+    public PatrolState(T owner) : base(owner) {}
+
+    // Called each frame while the State is active
+    private void OnUpdate()
+    {
+        Debug.Log("Patrol state on update");
+    }
+	
+    // Optionally override OnEnter and OnExit methods
+}
+
+```
+
+### Hierarchical RuleBuilder
+
+An intuitive, hierarchical rule-building system designed for creating and evaluating complex conditional logic in a modular way across a variety of decision-making needs, such as AI logic, character behavior design, and any scenario requiring layered rule evaluation. RuleBuilder enables developers to define branching conditions, nested rules, and dynamic decision trees using `If`, `ElseIf`, `Else`, and `Switch` statements—all within an easy-to-read, fluent interface.  
+
+This code sample demonstrates a basic usage of the RuleBuilder to manage a robot’s state transitions based on health, customer service, and task priorities, For a complete reference, see the demo project.
+
+```
+var nextAction = RuleBuilder<RobotState>.Begin()
+    .If(() => robot.HasFault() || robot.IsHealthLow()) // Priority check: Health and physical evaluation.
+        .Then(RuleBuilder<RobotState>.Begin() // Nested RuleBuilder.
+            .Switch(() => robot.HealthState)
+                .Case(HealthState.HealthLow, RobotState.RECHARGE)
+                .Case(HealthState.HasFault,  RobotState.MAINTENANCE)
+                .Case(HealthState.Critical,  RobotState.STOPPED)
+                .Default(RobotState.UNHANDLED_HEALTH_STATE) // Notify operator if health state is not handled.
+            .EndSwitch()
+            .Evaluate())
+    .ElseIf(robot.HasCustomers) // Next priority: Customer service after health checks.
+        .Then(RobotState.CUSTOMER_CARE)
+    .ElseIf(robot.HasTask) // If no customers, check for pending tasks.
+        .Then(RuleBuilder<RobotState>.Begin()
+            .Switch(() => robot.RobotTask)    
+                .Case(RobotTask.Packaging, RobotState.PACKAGING)
+                .Case(RobotTask.Inventory, RobotState.INVENTORY_MANAGEMENT)
+                .Default(RobotState.UNHANDLED_TASK_STATE) // Notify operator if task type is not handled.
+            .EndSwitch()
+            .Evaluate())
+    .Else(RobotState.REST) // Default to rest state if no conditions are met.
+    .Evaluate();
+```
+
+This tool is sepcially designed for defining transitions within a StateMachine and creating flexible rule sets for Fuzzy Logic decision-making. It provides a streamlined approach for handling complex conditions and transitions in a centralized, easy-to-read format. For detailed examples, refer to the demo projects.
 
